@@ -6,6 +6,239 @@ from sklearn.preprocessing import LabelEncoder
 import warnings
 warnings.filterwarnings('ignore')
 
+# Mobile app styling
+def set_mobile_style():
+    st.markdown("""
+    <style>
+    /* Hide sidebar and header */
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    
+    .stApp header {
+        display: none !important;
+    }
+    
+    /* Mobile app container */
+    .stApp {
+        background: #000000;
+        min-height: 100vh;
+        max-width: 428px;
+        margin: 0 auto;
+    }
+    
+    .main .block-container {
+        padding: 0;
+        max-width: 100%;
+    }
+    
+    /* Status bar */
+    .status-bar {
+        background: #000000;
+        color: white;
+        padding: 8px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Header */
+    .app-header {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+        padding: 20px;
+        text-align: center;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .app-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .app-header p {
+        font-size: 16px;
+        margin: 8px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    /* Input section */
+    .input-section {
+        background: #1C1C1E;
+        padding: 20px;
+        color: white;
+    }
+    
+    .input-section h3 {
+        color: #FF6B35;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+    }
+    
+    /* Input cards */
+    .input-card {
+        background: #2C2C2E;
+        border: 2px solid #3A3A3C;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        color: white;
+        font-size: 16px;
+    }
+    
+    .input-label {
+        color: #98989D;
+        font-size: 12px;
+        margin-bottom: 4px;
+        display: block;
+    }
+    
+    .input-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    /* Button */
+    .analyze-btn {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 18px;
+        font-size: 18px;
+        font-weight: 600;
+        width: calc(100% - 40px);
+        margin: 20px;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+        text-align: center;
+    }
+    
+    /* Results section */
+    .results-section {
+        background: #1C1C1E;
+        padding: 20px;
+        color: white;
+        min-height: calc(100vh - 400px);
+    }
+    
+    .result-card {
+        background: #2C2C2E;
+        border: 2px solid #3A3A3C;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    
+    .result-card h3 {
+        color: #FF6B35;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 16px 0;
+    }
+    
+    /* Spec grid */
+    .spec-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 16px 0;
+    }
+    
+    .spec-item {
+        background: #1C1C1E;
+        border: 2px solid #3A3A3C;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+    
+    .spec-label {
+        color: #98989D;
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    
+    .spec-value {
+        color: white;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .spec-detail {
+        color: #FF6B35;
+        font-size: 11px;
+        margin-top: 4px;
+    }
+    
+    /* TCO display */
+    .tco-display {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+        margin-bottom: 16px;
+    }
+    
+    .tco-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+    
+    .tco-value {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .tco-subtitle {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 4px;
+    }
+    
+    /* Cost breakdown */
+    .cost-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #3A3A3C;
+    }
+    
+    .cost-item:last-child {
+        border-bottom: none;
+    }
+    
+    .cost-label {
+        color: #98989D;
+        font-size: 14px;
+    }
+    
+    .cost-value {
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    
+    /* Hide streamlit elements */
+    .stSelectbox, .stNumberInput, .stSlider, .stButton, .stSuccess, .stSpinner, .stMetric, .stPlotlyChart, .stInfo {
+        display: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 class CarJudoF150System:
     def __init__(self, csv_path):
         self.csv_path = csv_path
@@ -196,171 +429,194 @@ def main():
         page_icon="🚗"
     )
     
-    st.title("🚗 Car Judo - What Can You REALLY Afford?")
-    st.markdown("Stop guessing. Know exactly what your budget gets you - **including all hidden costs.**")
+    # Apply mobile styling
+    set_mobile_style()
+    
+    # Status bar
+    st.markdown("""
+    <div class="status-bar">
+        <span>9:41</span>
+        <span>📶 🔋</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Header
+    st.markdown("""
+    <div class="app-header">
+        <h1>🚗 Car Judo</h1>
+        <p>What Can You REALLY Afford?</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Initialize the system
     try:
         csv_path = "Ford_150.csv"
         car_judo = CarJudoF150System(csv_path)
     except FileNotFoundError:
-        st.error(f"❌ Could not find file: {csv_path}")
-        st.info("Please make sure Ford_150.csv is in the same directory as this app.")
+        st.markdown("""
+        <div class="results-section">
+            <div class="result-card">
+                <h3>❌ Error</h3>
+                <p>Could not find Ford_150.csv file</p>
+                <p>Please make sure the data file is in the same directory</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         return
     except Exception as e:
-        st.error(f"❌ Error loading system: {str(e)}")
+        st.markdown(f"""
+        <div class="results-section">
+            <div class="result-card">
+                <h3>❌ Error</h3>
+                <p>{str(e)}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         return
     
-    # Main interface
-    st.sidebar.markdown("### 🚗 Car Judo")
-    st.sidebar.markdown("*F-150 Budget Intelligence*")
-    st.sidebar.markdown("---")
-    st.sidebar.header("💰 Your Budget")
-    
-    # User inputs
-    # Fixed vehicle type for prototype
-    st.sidebar.markdown("**Vehicle Type:** F-150")
+    # Input section
+    st.markdown("""
+    <div class="input-section">
+        <h3>💰 Your Budget</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Get available trims
     available_trims = sorted(car_judo.df_clean['Trim'].unique())
-    trim = st.sidebar.selectbox("Preferred Trim", available_trims)
     
-    budget = st.sidebar.number_input("Budget ($)", min_value=5000, max_value=100000, value=25000, step=1000)
-    annual_mileage = st.sidebar.slider("Annual Mileage", 5000, 30000, 15000, 1000)
+    # Hidden inputs
+    budget = st.number_input("Budget", min_value=5000, max_value=100000, value=25000, step=1000, key="budget")
+    trim = st.selectbox("Trim", available_trims, key="trim")
+    annual_mileage = st.slider("Mileage", 5000, 30000, 15000, 1000, key="mileage")
     
-    # Budget validation
-    if budget < 10000:
-        st.sidebar.warning("⚠️ Low budget may limit options to older/high-mileage vehicles")
-    elif budget > 50000:
-        st.sidebar.success("✨ Great budget! You should find excellent options")
+    # Display inputs with mobile styling
+    st.markdown(f"""
+    <div class="input-section">
+        <div class="input-card">
+            <span class="input-label">VEHICLE TYPE</span>
+            <div class="input-value">F-150</div>
+        </div>
+        <div class="input-card">
+            <span class="input-label">PREFERRED TRIM</span>
+            <div class="input-value">{trim}</div>
+        </div>
+        <div class="input-card">
+            <span class="input-label">BUDGET</span>
+            <div class="input-value">${budget:,}</div>
+        </div>
+        <div class="input-card">
+            <span class="input-label">ANNUAL MILEAGE</span>
+            <div class="input-value">{annual_mileage:,} miles</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Analyze button
-    if st.sidebar.button("🚗 ANALYZE", type="primary"):
+    analyze_clicked = st.button("ANALYZE", key="analyze")
+    
+    if analyze_clicked:
+        # Show loading
+        st.markdown("""
+        <div class="analyze-btn">
+            Analyzing your options...
+        </div>
+        """, unsafe_allow_html=True)
+        
         with st.spinner("Analyzing your F-150 options..."):
             # Get predictions
             predictions = car_judo.predict_car_specifications(budget, trim)
             
-            if 'error' in predictions:
-                st.error(f"Prediction error: {predictions['error']}")
-                return
-            
-            # Calculate TCO
-            tco_analysis = car_judo.calculate_tco(predictions, budget, annual_mileage)
-            
-            if 'error' in tco_analysis:
-                st.error(f"TCO calculation error: {tco_analysis['error']}")
-                return
-            
-            # Display results
-            st.success(f"🎯 BOOM! Your ${budget:,} budget gets you:")
-            
-            # Main results
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.subheader("Expected Specifications")
-                st.write(f"**Vehicle:** {predictions['vehicle']}")
-                st.write(f"**Trim:** {predictions['trim']}")
-                st.write(f"**Year:** {predictions['year']} (range: {predictions['year_range'][0]}-{predictions['year_range'][1]})")
-                st.write(f"**Mileage:** {predictions['mileage']:,} miles (range: {predictions['mileage_range'][0]:,}-{predictions['mileage_range'][1]:,})")
-                st.write(f"**Budget:** ${budget:,}")
-            
-            with col2:
-                st.subheader("Total Cost Breakdown")
-                st.write(f"**Purchase Price:** ${tco_analysis['purchase_price']:,}")
-                st.write(f"**Annual Maintenance:** ${tco_analysis['annual_maintenance']:,.0f}")
-                st.write(f"**Annual Insurance:** ${tco_analysis['annual_insurance']:,.0f}")
-                st.write(f"**Annual Fuel:** ${tco_analysis['annual_fuel']:,.0f}")
-                st.write(f"**Annual Depreciation:** ${tco_analysis['annual_depreciation']:,.0f}")
-            
-            # TCO Summary
-            st.subheader("Total Cost of Ownership")
-            
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric("Annual Ownership Cost", f"${tco_analysis['annual_tco']:,.0f}")
-                st.write("*(excluding purchase price)*")
-            
-            with col2:
-                st.metric("5-Year Total Cost", f"${tco_analysis['total_5yr_tco']:,.0f}")
-                st.write("*(including purchase)*")
-            
-            with col3:
-                monthly_cost = tco_analysis['annual_tco'] / 12
-                st.metric("Monthly Cost", f"${monthly_cost:,.0f}")
-                st.write("*(ownership only)*")
-            
-            # Visual breakdown
-            st.subheader("5-Year Cost Breakdown")
-            
-            cost_data = {
-                'Purchase Price': tco_analysis['purchase_price'],
-                'Maintenance': tco_analysis['total_maintenance'],
-                'Insurance': tco_analysis['total_insurance'],
-                'Fuel': tco_analysis['total_fuel'],
-                'Depreciation': tco_analysis['total_depreciation']
-            }
-            
-            # Create bar chart
-            import matplotlib.pyplot as plt
-            fig, ax = plt.subplots()
-            colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
-            ax.bar(cost_data.keys(), cost_data.values(), color=colors)
-            ax.set_ylabel('Cost ($)')
-            ax.set_title('5-Year Total Cost of Ownership Breakdown')
-            plt.xticks(rotation=45)
-            st.pyplot(fig)
-            
-            # Insights
-            st.subheader("Smart Insights")
-            
-            insights = []
-            
-            # Purchase vs total cost ratio
-            purchase_ratio = tco_analysis['purchase_price'] / tco_analysis['total_5yr_tco']
-            if purchase_ratio < 0.4:
-                insights.append("💰 Purchase price is less than 40% of total cost - focus on maintenance and fuel efficiency!")
-            elif purchase_ratio > 0.6:
-                insights.append("🚗 Purchase price dominates total cost - consider negotiating harder on price!")
-            
-            # Age analysis
-            if predictions['year'] < 2015:
-                insights.append("⚠️ Expected older vehicle - budget more for maintenance and repairs")
-            elif predictions['year'] > 2022:
-                insights.append("✨ Nearly new vehicle - lower maintenance but higher depreciation")
-            
-            # Mileage analysis
-            if predictions['mileage'] > 100000:
-                insights.append("🔧 High mileage expected - factor in potential major repairs")
-            
-            for insight in insights:
-                st.info(insight)
+            if 'error' not in predictions:
+                # Calculate TCO
+                tco_analysis = car_judo.calculate_tco(predictions, budget, annual_mileage)
+                
+                if 'error' not in tco_analysis:
+                    # Results section
+                    monthly_cost = tco_analysis['annual_tco'] / 12
+                    
+                    st.markdown(f"""
+                    <div class="results-section">
+                        <div class="result-card">
+                            <h3>🎯 BOOM! Your ${budget:,} budget gets you:</h3>
+                        </div>
+                        
+                        <div class="result-card">
+                            <h3>📋 Expected Specifications</h3>
+                            <div class="spec-grid">
+                                <div class="spec-item">
+                                    <div class="spec-label">VEHICLE</div>
+                                    <div class="spec-value">F-150</div>
+                                    <div class="spec-detail">{predictions['trim']}</div>
+                                </div>
+                                <div class="spec-item">
+                                    <div class="spec-label">YEAR</div>
+                                    <div class="spec-value">{predictions['year']}</div>
+                                    <div class="spec-detail">{predictions['year_range'][0]}-{predictions['year_range'][1]}</div>
+                                </div>
+                                <div class="spec-item">
+                                    <div class="spec-label">MILEAGE</div>
+                                    <div class="spec-value">{predictions['mileage']:,}</div>
+                                    <div class="spec-detail">{predictions['mileage_range'][0]:,}-{predictions['mileage_range'][1]:,}</div>
+                                </div>
+                                <div class="spec-item">
+                                    <div class="spec-label">BUDGET</div>
+                                    <div class="spec-value">${budget:,}</div>
+                                    <div class="spec-detail">Your budget</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tco-display">
+                            <div class="tco-label">5-YEAR TOTAL COST</div>
+                            <div class="tco-value">${tco_analysis['total_5yr_tco']:,.0f}</div>
+                            <div class="tco-subtitle">${monthly_cost:,.0f}/month ownership cost</div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <h3>💸 Annual Costs</h3>
+                            <div class="cost-item">
+                                <span class="cost-label">🔧 Maintenance</span>
+                                <span class="cost-value">${tco_analysis['annual_maintenance']:,.0f}</span>
+                            </div>
+                            <div class="cost-item">
+                                <span class="cost-label">🛡️ Insurance</span>
+                                <span class="cost-value">${tco_analysis['annual_insurance']:,.0f}</span>
+                            </div>
+                            <div class="cost-item">
+                                <span class="cost-label">⛽ Fuel</span>
+                                <span class="cost-value">${tco_analysis['annual_fuel']:,.0f}</span>
+                            </div>
+                            <div class="cost-item">
+                                <span class="cost-label">📉 Depreciation</span>
+                                <span class="cost-value">${tco_analysis['annual_depreciation']:,.0f}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
     
-    # Educational section
-    with st.expander("What is Total Cost of Ownership?"):
-        st.markdown("""
-        **TCO includes all costs over 5 years:**
-        - **Purchase Price:** One-time cost to buy the vehicle
-        - **Maintenance:** Oil changes, repairs, tires, brakes
-        - **Insurance:** Coverage costs (varies by trim and value)
-        - **Fuel:** Gas costs based on your annual mileage
-        - **Depreciation:** Value loss over time
-        
-        **Car Judo shows you the REAL cost** - not just the sticker price!
-        """)
+    # Analyze button (visible)
+    st.markdown(f"""
+    <div class="analyze-btn" onclick="document.querySelector('[data-testid=\"stButton\"] button').click()">
+        🚗 ANALYZE MY BUDGET
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Branded footer
-    st.markdown("---")
-    st.markdown(
-        """
-        <div style='text-align: center; color: #666; padding: 20px;'>
-            <strong>Car Judo</strong> - Stop Overpaying. Start Driving Smarter.<br>
-            <em>F-150 Budget Intelligence for Smart Truck Buyers</em>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+    # Add JavaScript to handle button clicks
+    st.markdown("""
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileButton = document.querySelector('.analyze-btn');
+        if (mobileButton) {
+            mobileButton.addEventListener('click', function() {
+                const hiddenButton = document.querySelector('[data-testid="stButton"] button');
+                if (hiddenButton) {
+                    hiddenButton.click();
+                }
+            });
+        }
+    });
+    </script>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
