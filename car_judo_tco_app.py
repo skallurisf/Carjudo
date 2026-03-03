@@ -6,52 +6,65 @@ from sklearn.preprocessing import LabelEncoder
 import warnings
 warnings.filterwarnings('ignore')
 
-class CarJudoTCOSystem:
+class CarJudoF150System:
     def __init__(self, csv_path):
-        self.df = pd.read_csv(csv_path)
-        self.model = None
+        self.csv_path = csv_path
+        self.df = None
+        self.df_clean = None
         self.year_model = None
         self.mileage_model = None
-        self.label_encoders = {}
-        self.feature_columns = []
+        self.trim_encoder = None
         
-        # Fix data types first
-        self._fix_data_types()
+        # Load and setup
+        self.load_data()
         self.setup_models()
         self.setup_tco_calculators()
     
+    def load_data(self):
+        """Load F-150 data"""
+        try:
+            self.df = pd.read_csv(self.csv_path)
+            self._fix_data_types()
+        except Exception as e:
+            raise Exception(f"Could not load CSV file: {str(e)}")
+    
     def _fix_data_types(self):
-        """Fix string data types to numeric"""
+        """Fix data types for F-150 data"""
+        # Convert string numbers with commas to numeric
         if 'Mileage Done' in self.df.columns:
-            self.df['Mileage Done'] = self.df['Mileage Done'].astype(str).str.replace(',', '').str.replace(' ', '')
+            self.df['Mileage Done'] = self.df['Mileage Done'].astype(str).str.replace(',', '')
             self.df['Mileage Done'] = pd.to_numeric(self.df['Mileage Done'], errors='coerce')
         
         if 'Price in USD' in self.df.columns:
-            self.df['Price in USD'] = self.df['Price in USD'].astype(str).str.replace('$', '').str.replace(',', '').str.replace(' ', '')
+            self.df['Price in USD'] = self.df['Price in USD'].astype(str).str.replace('$', '').str.replace(',', '')
             self.df['Price in USD'] = pd.to_numeric(self.df['Price in USD'], errors='coerce')
     
     def setup_models(self):
-        """Setup prediction models for reverse engineering"""
+        """Setup prediction models for F-150"""
         # Clean data
-        df_clean = self.df.dropna().reset_index(drop=True)
-        self.df_clean = df_clean
+        self.df_clean = self.df.dropna()
         
-        # Encode categorical variables
-        categorical_columns = ['MODEL', 'Trim', 'Color', 'Drive Train', 'Location (State)']
+        # Remove outliers
+        for col in ['Price in USD', 'Mileage Done']:
+            Q1 = self.df_clean[col].quantile(0.25)
+            Q3 = self.df_clean[col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            self.df_clean = self.df_clean[(self.df_clean[col] >= lower_bound) & (self.df_clean[col] <= upper_bound)]
         
-        for col in categorical_columns:
-            if col in df_clean.columns:
-                le = LabelEncoder()
-                df_clean[col + '_encoded'] = le.fit_transform(df_clean[col])
-                self.label_encoders[col] = le
+        # Reset index
+        self.df_clean = self.df_clean.reset_index(drop=True)
         
-        # Features for prediction
-        self.feature_columns = ['Price in USD', 'Trim_encoded']
-        X = df_clean[self.feature_columns]
+        # Encode trim
+        self.trim_encoder = LabelEncoder()
+        self.df_clean['Trim_encoded'] = self.trim_encoder.fit_transform(self.df_clean['Trim'].astype(str))
         
-        # Target variables
-        y_year = df_clean['Year']
-        y_mileage = df_clean['Mileage Done']
+        # Features and targets
+        features = ['Price in USD', 'Trim_encoded']
+        X = self.df_clean[features]
+        y_year = self.df_clean['Year']
+        y_mileage = self.df_clean['Mileage Done']
         
         # Train models
         self.year_model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
@@ -62,17 +75,15 @@ class CarJudoTCOSystem:
     
     def setup_tco_calculators(self):
         """Setup TCO calculation parameters"""
-        # Base TCO rates (can be refined with real data)
         self.tco_rates = {
-            'maintenance_per_mile': 0.08,  # $0.08 per mile average
-            'maintenance_base_per_year': 500,  # Base maintenance cost
-            'insurance_base_per_year': 1200,  # Base insurance
-            'insurance_per_1000_value': 10,  # $10 per $1000 of car value
-            'fuel_per_mile': 0.15,  # Average fuel cost
-            'depreciation_per_year': 0.12,  # 12% depreciation per year
+            'maintenance_per_mile': 0.08,
+            'maintenance_base_per_year': 500,
+            'insurance_base_per_year': 1200,
+            'insurance_per_1000_value': 10,
+            'fuel_per_mile': 0.15,
+            'depreciation_per_year': 0.12,
         }
         
-        # Trim-specific adjustments
         self.trim_adjustments = {
             'XL': {'insurance': 0.9, 'maintenance': 0.8},
             'XLT': {'insurance': 1.0, 'maintenance': 1.0},
@@ -86,11 +97,13 @@ class CarJudoTCOSystem:
         """Predict year and mileage for given budget and trim"""
         try:
             # Encode trim
-            if trim in self.label_encoders['Trim'].classes_:
-                trim_encoded = self.label_encoders['Trim'].transform([trim])[0]
+            if trim in self.trim_encoder.classes_:
+                trim_encoded = self.trim_encoder.transform([trim])[0]
             else:
-                # Find closest trim or use default
-                trim_encoded = 0  # Default to first trim
+                # Use most common trim if specified trim not found
+                most_common_trim = self.df_clean['Trim'].mode()[0]
+                trim_encoded = self.trim_encoder.transform([most_common_trim])[0]
+                trim = most_common_trim
             
             # Prepare input
             input_data = np.array([[budget, trim_encoded]])
@@ -108,73 +121,80 @@ class CarJudoTCOSystem:
             mileage_range = (predicted_mileage - 10000, predicted_mileage + 10000)
             
             return {
+                'vehicle': 'F-150',
+                'trim': trim,
                 'year': predicted_year,
                 'mileage': predicted_mileage,
                 'year_range': year_range,
                 'mileage_range': mileage_range
             }
+            
         except Exception as e:
             return {'error': str(e)}
     
-    def calculate_tco(self, predicted_specs, budget, trim, annual_mileage=15000):
+    def calculate_tco(self, predictions, budget, annual_mileage=15000):
         """Calculate Total Cost of Ownership"""
-        year = predicted_specs['year']
-        mileage = predicted_specs['mileage']
-        current_year = 2025
-        car_age = current_year - year
-        
-        # Get trim adjustments
-        trim_adj = self.trim_adjustments.get(trim, {'insurance': 1.0, 'maintenance': 1.0})
-        
-        # Purchase price
-        purchase_price = budget
-        
-        # Annual maintenance costs
-        maintenance_base = self.tco_rates['maintenance_base_per_year'] * trim_adj['maintenance']
-        maintenance_mileage = annual_mileage * self.tco_rates['maintenance_per_mile'] * trim_adj['maintenance']
-        annual_maintenance = maintenance_base + maintenance_mileage
-        
-        # Annual insurance
-        insurance_base = self.tco_rates['insurance_base_per_year'] * trim_adj['insurance']
-        insurance_value = (purchase_price / 1000) * self.tco_rates['insurance_per_1000_value'] * trim_adj['insurance']
-        annual_insurance = insurance_base + insurance_value
-        
-        # Annual fuel costs
-        annual_fuel = annual_mileage * self.tco_rates['fuel_per_mile']
-        
-        # Annual depreciation
-        annual_depreciation = purchase_price * self.tco_rates['depreciation_per_year']
-        
-        # Calculate 5-year TCO
-        years_ownership = 5
-        total_maintenance = annual_maintenance * years_ownership
-        total_insurance = annual_insurance * years_ownership
-        total_fuel = annual_fuel * years_ownership
-        total_depreciation = annual_depreciation * years_ownership
-        
-        total_tco = purchase_price + total_maintenance + total_insurance + total_fuel + total_depreciation
-        
-        return {
-            'purchase_price': purchase_price,
-            'annual_maintenance': annual_maintenance,
-            'annual_insurance': annual_insurance,
-            'annual_fuel': annual_fuel,
-            'annual_depreciation': annual_depreciation,
-            'annual_tco': annual_maintenance + annual_insurance + annual_fuel + annual_depreciation,
-            'total_5yr_tco': total_tco,
-            'total_5yr_costs': total_maintenance + total_insurance + total_fuel + total_depreciation,
-            'total_maintenance': total_maintenance,
-            'total_insurance': total_insurance,
-            'total_fuel': total_fuel,
-            'total_depreciation': total_depreciation
-        }
+        try:
+            year = predictions['year']
+            mileage = predictions['mileage']
+            trim = predictions['trim']
+            current_year = 2025
+            car_age = current_year - year
+            
+            # Get trim adjustments
+            trim_adj = self.trim_adjustments.get(trim, {'insurance': 1.0, 'maintenance': 1.0})
+            
+            # Purchase price
+            purchase_price = budget
+            
+            # Annual maintenance costs
+            maintenance_base = self.tco_rates['maintenance_base_per_year'] * trim_adj['maintenance']
+            maintenance_mileage = annual_mileage * self.tco_rates['maintenance_per_mile'] * trim_adj['maintenance']
+            annual_maintenance = maintenance_base + maintenance_mileage
+            
+            # Annual insurance
+            insurance_base = self.tco_rates['insurance_base_per_year'] * trim_adj['insurance']
+            insurance_value = (purchase_price / 1000) * self.tco_rates['insurance_per_1000_value'] * trim_adj['insurance']
+            annual_insurance = insurance_base + insurance_value
+            
+            # Annual fuel costs
+            annual_fuel = annual_mileage * self.tco_rates['fuel_per_mile']
+            
+            # Annual depreciation
+            annual_depreciation = purchase_price * self.tco_rates['depreciation_per_year']
+            
+            # Calculate 5-year TCO
+            years_ownership = 5
+            total_maintenance = annual_maintenance * years_ownership
+            total_insurance = annual_insurance * years_ownership
+            total_fuel = annual_fuel * years_ownership
+            total_depreciation = annual_depreciation * years_ownership
+            
+            total_tco = purchase_price + total_maintenance + total_insurance + total_fuel + total_depreciation
+            
+            return {
+                'purchase_price': purchase_price,
+                'annual_maintenance': annual_maintenance,
+                'annual_insurance': annual_insurance,
+                'annual_fuel': annual_fuel,
+                'annual_depreciation': annual_depreciation,
+                'annual_tco': annual_maintenance + annual_insurance + annual_fuel + annual_depreciation,
+                'total_5yr_tco': total_tco,
+                'total_5yr_costs': total_maintenance + total_insurance + total_fuel + total_depreciation,
+                'total_maintenance': total_maintenance,
+                'total_insurance': total_insurance,
+                'total_fuel': total_fuel,
+                'total_depreciation': total_depreciation
+            }
+        except Exception as e:
+            return {'error': str(e)}
 
 def main():
     st.set_page_config(
-    page_title="Car Judo - TCO Intelligence", 
-    layout="wide",
-    page_icon="🚗"
-)
+        page_title="Car Judo - F-150 Intelligence", 
+        layout="wide",
+        page_icon="🚗"
+    )
     
     st.title("🚗 Car Judo - What Can You REALLY Afford?")
     st.markdown("Stop guessing. Know exactly what your budget gets you - **including all hidden costs.**")
@@ -182,10 +202,10 @@ def main():
     # Initialize the system
     try:
         csv_path = "Ford_150.csv"
-        car_judo = CarJudoTCOSystem(csv_path)
-        st.success("✅ Car Judo system loaded successfully!")
+        car_judo = CarJudoF150System(csv_path)
     except FileNotFoundError:
         st.error(f"❌ Could not find file: {csv_path}")
+        st.info("Please make sure Ford_150.csv is in the same directory as this app.")
         return
     except Exception as e:
         st.error(f"❌ Error loading system: {str(e)}")
@@ -193,28 +213,30 @@ def main():
     
     # Main interface
     st.sidebar.markdown("### 🚗 Car Judo")
-    st.sidebar.markdown("*Budget-First Intelligence*")
+    st.sidebar.markdown("*F-150 Budget Intelligence*")
     st.sidebar.markdown("---")
     st.sidebar.header("💰 Your Budget")
     
     # User inputs
-    budget = st.sidebar.number_input("Budget ($)", min_value=5000, max_value=100000, value=25000, step=1000)
-    
-    # Budget validation
-    if budget < 10000:
-        st.sidebar.warning("⚠️ Low budget may limit options to older/high-mileage vehicles")
-    elif budget > 50000:
-        st.sidebar.success("✨ Great budget! You should find excellent options")
+    # Fixed vehicle type for prototype
+    st.sidebar.markdown("**Vehicle Type:** F-150")
     
     # Get available trims
     available_trims = sorted(car_judo.df_clean['Trim'].unique())
     trim = st.sidebar.selectbox("Preferred Trim", available_trims)
     
+    budget = st.sidebar.number_input("Budget ($)", min_value=5000, max_value=100000, value=25000, step=1000)
     annual_mileage = st.sidebar.slider("Annual Mileage", 5000, 30000, 15000, 1000)
+    
+    # Budget validation
+    if budget < 10000:
+        st.sidebar.warning("⚠️ Low budget may limit options to older/higher-mileage vehicles")
+    elif budget > 50000:
+        st.sidebar.success("✨ Great budget! You should find excellent options")
     
     # Analyze button
     if st.sidebar.button("🚗 ANALYZE", type="primary"):
-        with st.spinner("Analyzing your options..."):
+        with st.spinner("Analyzing your F-150 options..."):
             # Get predictions
             predictions = car_judo.predict_car_specifications(budget, trim)
             
@@ -223,17 +245,22 @@ def main():
                 return
             
             # Calculate TCO
-            tco_analysis = car_judo.calculate_tco(predictions, budget, trim, annual_mileage)
+            tco_analysis = car_judo.calculate_tco(predictions, budget, annual_mileage)
+            
+            if 'error' in tco_analysis:
+                st.error(f"TCO calculation error: {tco_analysis['error']}")
+                return
             
             # Display results
-            st.success(f"BOOM! Your ${budget:,} budget gets you:")
+            st.success(f"🎯 BOOM! Your ${budget:,} budget gets you:")
             
             # Main results
             col1, col2 = st.columns(2)
             
             with col1:
                 st.subheader("Expected Specifications")
-                st.write(f"**Trim:** {trim}")
+                st.write(f"**Vehicle:** {predictions['vehicle']}")
+                st.write(f"**Trim:** {predictions['trim']}")
                 st.write(f"**Year:** {predictions['year']} (range: {predictions['year_range'][0]}-{predictions['year_range'][1]})")
                 st.write(f"**Mileage:** {predictions['mileage']:,} miles (range: {predictions['mileage_range'][0]:,}-{predictions['mileage_range'][1]:,})")
                 st.write(f"**Budget:** ${budget:,}")
@@ -309,25 +336,6 @@ def main():
             
             for insight in insights:
                 st.info(insight)
-            
-            # What If Scenarios
-            st.subheader("What If Scenarios")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                if st.button(f"Add $5,000 to Budget (${budget+5000:,} total)"):
-                    with st.spinner("Calculating upgraded options..."):
-                        upgraded_predictions = car_judo.predict_car_specifications(budget + 5000, trim)
-                        if 'error' not in upgraded_predictions:
-                            st.success(f"🚀 For ${budget+5000:,}: {upgraded_predictions['year']} model with {upgraded_predictions['mileage']:,} miles")
-                            st.write("That's **{upgraded_predictions['year'] - predictions['year']} years newer** and **{predictions['mileage'] - upgraded_predictions['mileage']:,} fewer miles**!")
-            
-            with col2:
-                if st.button("Reduce Annual Mileage to 10,000"):
-                    with st.spinner("Recalculating costs..."):
-                        lower_mileage_tco = car_judo.calculate_tco(predictions, budget, trim, 10000)
-                        annual_savings = tco_analysis['annual_tco'] - lower_mileage_tco['annual_tco']
-                        st.success(f"💸 You'd save ${annual_savings:,.0f} per year (${annual_savings*5:,.0f} over 5 years)")
     
     # Educational section
     with st.expander("What is Total Cost of Ownership?"):
@@ -348,7 +356,7 @@ def main():
         """
         <div style='text-align: center; color: #666; padding: 20px;'>
             <strong>Car Judo</strong> - Stop Overpaying. Start Driving Smarter.<br>
-            <em>Budget-First Intelligence for Smart Car Buyers</em>
+            <em>F-150 Budget Intelligence for Smart Truck Buyers</em>
         </div>
         """, 
         unsafe_allow_html=True
