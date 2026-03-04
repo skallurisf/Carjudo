@@ -303,7 +303,7 @@ Mileage: <b>{mileage:,}</b> miles
 </div>
 """, unsafe_allow_html=True)
 
-        st.image("f150.png",caption=f"Estimated vehicle: {year} Ford F-150 {trim}",use_container_width=True)
+        st.image("F150.png",caption=f"Estimated vehicle: {year} Ford F-150 {trim}",use_container_width=True)
 
         col1,col2,col3 = st.columns(3)
 
