@@ -307,6 +307,27 @@ Mileage: <b>{mileage:,}</b> miles
 
         col1,col2,col3 = st.columns(3)
 
+        st.markdown("""
+<div style="
+background:#ecfdf5;
+border:1px solid #10b981;
+padding:18px;
+border-radius:12px;
+margin-top:20px;
+font-size:18px;
+">
+
+💡 <b>CarJudo Insight</b><br><br>
+
+Most buyers only look at the purchase price.  
+But your real ownership cost is <b>much higher</b>.
+
+Your estimated <b>monthly ownership cost</b> is approximately 
+<b>${:,.0f}</b> including fuel, insurance, maintenance, and depreciation.
+
+</div>
+""".format(tco['annual']/12), unsafe_allow_html=True)
+
         col1.markdown(f"""
         <div class="metric-card">
         <div class="metric-value">${tco['annual']:,.0f}</div>
@@ -345,6 +366,8 @@ Mileage: <b>{mileage:,}</b> miles
                      title="True Cost of Ownership (5 Years)")
 
         fig.update_layout(template="plotly_white")
+
+        st.markdown("### 📊 True Cost Breakdown")
 
         st.plotly_chart(fig,use_container_width=True)
 
